@@ -1,0 +1,1390 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>HBTI 海克斯大乱斗行为类型指标测试</title>
+    <style>
+        :root {
+            --bg-main: #060912;
+            --bg-card: #0D1322;
+            --color-primary: #C49A45;
+            --color-active: #00F0FF;
+            --color-accent: rgba(0, 240, 255, 0.15);
+            --color-accent-text: #00F0FF;
+            --color-gold: #C49A45;
+            --text-main: #E1E6F0;
+            --text-muted: #62728C;
+            --border-color: rgba(196, 154, 69, 0.18);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+
+        body {
+            background:
+                radial-gradient(circle at 50% -10%, rgba(0, 240, 255, 0.12), transparent 38%),
+                radial-gradient(circle at 50% 110%, rgba(196, 154, 69, 0.14), transparent 42%),
+                linear-gradient(rgba(6, 9, 18, 0.94), rgba(6, 9, 18, 0.96)),
+                url('images/bg.png') center/cover no-repeat fixed;
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            line-height: 1.6;
+            padding-top: 60px; /* 为固定导航栏留出空间 */
+            padding-bottom: 40px;
+        }
+
+        /* --- 🧭 固定顶部导航栏 --- */
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 60px;
+            background: rgba(6, 9, 18, 0.9);
+            border-bottom: 1px solid rgba(196, 154, 69, 0.22);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            z-index: 1000;
+            box-shadow: 0 8px 28px rgba(0, 0, 0, 0.48), 0 0 22px rgba(0, 240, 255, 0.06);
+            backdrop-filter: blur(16px);
+        }
+
+        .nav-item {
+            font-size: 15px;
+            font-weight: 500;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 8px 16px;
+            border-radius: 20px;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .nav-item.active {
+            color: var(--color-active);
+            background: linear-gradient(180deg, rgba(0, 240, 255, 0.16), rgba(196, 154, 69, 0.08));
+            box-shadow: inset 0 0 0 1px rgba(0, 240, 255, 0.2), 0 0 16px rgba(0, 240, 255, 0.1);
+        }
+
+        /* --- 📦 手机端高适配容器 --- */
+        .container {
+            width: 100%;
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 16px;
+        }
+
+        .view {
+            display: none;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        .view.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* --- 🏛️ 16p风悬浮圆角卡片 --- */
+        .card {
+            background:
+                linear-gradient(180deg, rgba(13, 19, 34, 0.94), rgba(8, 13, 26, 0.96)) padding-box,
+                linear-gradient(135deg, rgba(196, 154, 69, 0.42), rgba(0, 240, 255, 0.22), rgba(196, 154, 69, 0.12)) border-box;
+            border-radius: 16px;
+            padding: 28px 24px;
+            box-shadow: 0 18px 48px rgba(0, 0, 0, 0.46), 0 0 26px rgba(0, 240, 255, 0.06);
+            border: 1px solid transparent;
+            text-align: center;
+            margin-bottom: 20px;
+            backdrop-filter: blur(14px);
+        }
+
+        /* --- 🏠 1. 入口欢迎页样式 --- */
+        .welcome-title {
+            font-size: 24px;
+            font-weight: 800;
+            color: var(--color-primary);
+            margin-bottom: 12px;
+            letter-spacing: 1px;
+        }
+
+        .welcome-subtitle {
+            font-size: 14px;
+            color: var(--text-muted);
+            margin-bottom: 24px;
+        }
+
+        .banner-container {
+            width: 100%;
+            aspect-ratio: 3 / 4;
+            background-color: transparent;
+            border-radius: 16px 16px 0 0;
+            border: 1px solid rgba(196, 154, 69, 0.32);
+            box-shadow: 0 10px 28px rgba(0, 0, 0, 0.42), 0 0 18px rgba(0, 240, 255, 0.1);
+            overflow: hidden;
+            margin: 0 0 20px 0;
+        }
+
+        .welcome-logo {
+            width: 100%;
+            height: 100%;
+            display: block;
+            object-fit: cover;
+            margin: 0 !important;
+            border-radius: 0;
+        }
+
+        #welcome-view .card {
+            padding: 0 0 28px 0;
+            overflow: hidden;
+        }
+
+        #welcome-view .card > p {
+            padding: 0 24px;
+        }
+
+        .btn-large {
+            display: inline-block;
+            width: 100%;
+            background: rgba(18, 26, 44, 0.75);
+            color: #E1E6F0;
+            padding: 14px 24px;
+            font-size: 16px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            border: 1px solid #C49A45;
+            border-radius: 30px;
+            cursor: pointer;
+            text-shadow: none;
+            box-shadow: inset 0 0 8px rgba(196, 154, 69, 0.05);
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .btn-large:hover,
+        .btn-large:active {
+            background: rgba(196, 154, 69, 0.15);
+            color: #FFFFFF;
+            box-shadow: 0 0 12px rgba(196, 154, 69, 0.25), inset 0 0 10px rgba(196, 154, 69, 0.08);
+            filter: none;
+        }
+
+        .btn-large:active {
+            transform: scale(0.98);
+        }
+
+        #welcome-view .btn-large {
+            width: calc(100% - 48px);
+            margin: 0 24px;
+            background: rgba(18, 26, 44, 0.75);
+            border: 1px solid #C49A45;
+            color: #E1E6F0;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            text-shadow: none;
+            box-shadow: inset 0 0 8px rgba(196, 154, 69, 0.05);
+        }
+
+        #welcome-view .btn-large:hover,
+        #welcome-view .btn-large:active {
+            background: rgba(196, 154, 69, 0.15);
+            color: #FFFFFF;
+            box-shadow: 0 0 12px rgba(196, 154, 69, 0.25), inset 0 0 10px rgba(196, 154, 69, 0.08);
+            filter: none;
+        }
+
+        #welcome-view .btn-large:active {
+            transform: scale(0.98);
+        }
+
+        .btn-large[onclick="switchView('matrix')"] {
+            background: rgba(18, 26, 44, 0.75) !important;
+            border: 1px solid #00F0FF !important;
+            color: #E1E6F0 !important;
+            box-shadow: inset 0 0 8px rgba(0, 240, 255, 0.05) !important;
+        }
+
+        .btn-large[onclick="switchView('matrix')"]:hover,
+        .btn-large[onclick="switchView('matrix')"]:active {
+            background: rgba(0, 240, 255, 0.12) !important;
+            color: #FFFFFF !important;
+            box-shadow: 0 0 12px rgba(0, 240, 255, 0.22), inset 0 0 10px rgba(0, 240, 255, 0.08) !important;
+        }
+
+        [onclick="copyShareLink()"] {
+            display: inline-flex !important;
+            align-items: center;
+            justify-content: center;
+            min-height: 38px;
+            padding: 9px 18px;
+            margin-top: 16px !important;
+            border: 1px solid rgba(0, 240, 255, 0.48);
+            border-radius: 999px;
+            background: rgba(18, 26, 44, 0.62);
+            color: #E1E6F0 !important;
+            text-decoration: none !important;
+            font-size: 13px !important;
+            font-weight: 700 !important;
+            letter-spacing: 1.2px;
+            text-align: center;
+            box-shadow: inset 0 0 8px rgba(0, 240, 255, 0.05);
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        [onclick="copyShareLink()"]:hover,
+        [onclick="copyShareLink()"]:active {
+            background: rgba(0, 240, 255, 0.12);
+            color: #FFFFFF !important;
+            box-shadow: 0 0 12px rgba(0, 240, 255, 0.2), inset 0 0 10px rgba(0, 240, 255, 0.08);
+        }
+
+        /* --- 📝 2. 测试答题页样式 --- */
+        .progress-container {
+            width: 100%;
+            height: 7px;
+            background-color: rgba(30, 43, 69, 0.9);
+            border-radius: 999px;
+            margin-bottom: 24px;
+            overflow: hidden;
+            box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.5);
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--color-primary), var(--color-active));
+            box-shadow: 0 0 10px rgba(0, 240, 255, 0.32);
+            border-radius: 999px;
+            transition: width 0.3s ease;
+        }
+
+        .progress-text {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+            text-align: left;
+        }
+
+        .question-title {
+            font-size: 18px;
+            font-weight: 800;
+            text-align: left;
+            margin-bottom: 24px;
+            color: var(--text-main);
+            letter-spacing: 0.2px;
+        }
+
+        .options-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .option-card {
+            background: linear-gradient(180deg, rgba(13, 19, 34, 0.95), rgba(9, 15, 29, 0.95));
+            border: 1px solid rgba(98, 114, 140, 0.22);
+            border-radius: 12px;
+            padding: 16px;
+            text-align: left;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-main);
+            cursor: pointer;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .option-card:hover,
+        .option-card:active {
+            background: linear-gradient(180deg, rgba(0, 240, 255, 0.08), rgba(196, 154, 69, 0.06));
+            border-color: var(--color-active);
+            box-shadow: 0 0 18px rgba(0, 240, 255, 0.1);
+        }
+
+        .option-card:active {
+            transform: scale(0.99);
+        }
+
+        .quiz-navigation {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .btn-nav {
+            flex: 1;
+            padding: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            border: 1px solid var(--border-color);
+            background: linear-gradient(180deg, rgba(13, 19, 34, 0.95), rgba(9, 15, 29, 0.95));
+            color: var(--text-muted);
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* --- 🏆 3. 测试结果页样式 --- */
+        .result-badge {
+            display: inline-block;
+            padding: 6px 14px;
+            background: linear-gradient(90deg, rgba(196,154,69,0.2), rgba(0,240,255,0.1));
+            color: var(--color-accent-text);
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            border-radius: 12px;
+            border: 1px solid var(--color-primary);
+            margin-bottom: 18px;
+            text-shadow: 0 0 8px rgba(0, 240, 255, 0.5);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 0 18px rgba(0, 240, 255, 0.08);
+        }
+
+        .result-title {
+            font-size: 26px;
+            font-weight: 800;
+            color: var(--color-primary);
+            margin-bottom: 8px;
+            letter-spacing: 1px;
+            text-shadow: 0 2px 12px rgba(196, 154, 69, 0.2);
+        }
+
+        /* 🛡️ 智能防变形图片相框 */
+        .image-frame {
+            width: 100%;
+            max-width: 280px;
+            aspect-ratio: 3 / 4;
+            background-image:
+                linear-gradient(#0D1322, #0D1322),
+                linear-gradient(135deg, #FFFFFF, #FFB7D5, #7FF4FF, #D1A3FF);
+            background-origin: border-box;
+            background-clip: padding-box, border-box;
+            border-radius: 12px;
+            margin: 0 auto 20px auto;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            padding: 0;
+            border: 1px solid transparent;
+            position: relative;
+            box-shadow: 0 0 16px rgba(127, 244, 255, 0.15), 0 18px 38px rgba(0, 0, 0, 0.42);
+        }
+
+        .image-frame img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 7px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .image-frame::before,
+        .image-frame::after,
+        .matrix-thumb::before,
+        .matrix-thumb::after {
+            content: "";
+            position: absolute;
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        .image-frame::before {
+            display: none;
+            content: none;
+        }
+
+        .image-frame::after {
+            display: none;
+            content: none;
+        }
+
+        .result-desc {
+            font-size: 14px;
+            color: var(--text-muted);
+            text-align: left;
+            background-color: transparent;
+            padding: 8px 2px;
+            border-radius: 0;
+            white-space: pre-line;
+            line-height: 1.75;
+        }
+
+        .gameplay-quote {
+            font-style: italic;
+            color: #FFFFFF;
+            font-size: 15px;
+            margin-bottom: 16px;
+            line-height: 1.5;
+            text-align: center;
+        }
+
+        .analysis-text {
+            color: var(--text-muted);
+            line-height: 1.75;
+        }
+
+        .stats-panel-card {
+            background: linear-gradient(180deg, rgba(13, 19, 34, 0.92), rgba(8, 13, 26, 0.94));
+            border-radius: 12px;
+            border: 1px solid rgba(196, 154, 69, 0.18);
+            padding: 18px 16px;
+            margin-top: 20px;
+            text-align: left;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+        }
+
+        .stats-panel-title {
+            color: var(--text-main);
+            font-size: 15px;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            text-align: center;
+            margin-bottom: 16px;
+        }
+
+        .stats-row {
+            display: grid;
+            grid-template-columns: minmax(84px, 1fr) 96px minmax(84px, 1fr);
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .stats-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .stats-label {
+            color: var(--text-muted);
+            font-size: 12px;
+            font-weight: 600;
+            line-height: 1.25;
+            transition: all 0.2s ease;
+        }
+
+        .stats-side {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            color: var(--text-muted);
+        }
+
+        .stats-side-left {
+            text-align: left;
+            align-items: flex-start;
+        }
+
+        .stats-side-right {
+            text-align: right;
+            align-items: flex-end;
+        }
+
+        .stats-side-dominant {
+            color: var(--text-main);
+            font-weight: 800;
+        }
+
+        .stats-side-dominant .stats-label {
+            color: var(--text-main);
+            font-weight: 800;
+        }
+
+        .stats-percent {
+            font-size: 13px;
+            font-weight: 800;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .stats-track {
+            height: 10px;
+            background-color: #1E2B45;
+            border-radius: 999px;
+            overflow: hidden;
+            position: relative;
+            display: flex;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .stats-fill {
+            height: 100%;
+            transition: width 0.6s ease-in-out;
+        }
+
+        .stats-fill-left {
+            background: var(--color-primary);
+            box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.12);
+        }
+
+        .stats-fill-right {
+            background: rgba(0, 240, 255, 0.24);
+            box-shadow: inset 1px 0 0 rgba(255, 255, 255, 0.12);
+        }
+
+        .stats-fill-dominant {
+            filter: brightness(1.15);
+            background: var(--color-primary);
+        }
+
+        .stats-midline {
+            position: absolute;
+            left: 50%;
+            top: 0;
+            width: 1px;
+            height: 100%;
+            background-color: rgba(248, 250, 252, 0.26);
+            transform: translateX(-0.5px);
+            pointer-events: none;
+        }
+
+        .stats-value {
+            color: #F8FAFC;
+            font-size: 12px;
+            font-weight: 700;
+            min-width: 24px;
+            text-align: right;
+            font-variant-numeric: tabular-nums;
+        }
+
+        @media (max-width: 420px) {
+            .stats-row {
+                grid-template-columns: minmax(72px, 1fr) 82px minmax(72px, 1fr);
+                gap: 8px;
+            }
+
+            .stats-label {
+                font-size: 11px;
+            }
+
+            .stats-percent {
+                font-size: 12px;
+            }
+        }
+
+        /* --- 📊 4. 人格图鉴 Tab 样式 --- */
+        .matrix-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .matrix-card {
+            background:
+                linear-gradient(180deg, rgba(13, 19, 34, 0.94), rgba(8, 13, 26, 0.96)) padding-box,
+                linear-gradient(135deg, rgba(196, 154, 69, 0.32), rgba(0, 240, 255, 0.16), rgba(196, 154, 69, 0.08)) border-box;
+            border-radius: 12px;
+            padding: 16px;
+            border: 1px solid transparent;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            text-align: left;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.36);
+            cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .matrix-card:hover {
+            box-shadow: 0 16px 38px rgba(0, 0, 0, 0.42), 0 0 18px rgba(0, 240, 255, 0.08);
+            transform: translateY(-1px);
+        }
+
+        .matrix-thumb {
+            width: 50px;
+            aspect-ratio: 3 / 4;
+            background-image:
+                linear-gradient(#0D1322, #0D1322),
+                linear-gradient(135deg, #FFFFFF, #FFB7D5, #7FF4FF, #D1A3FF);
+            background-origin: border-box;
+            background-clip: padding-box, border-box;
+            border-radius: 8px;
+            flex-shrink: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            border: 1px solid transparent;
+            position: relative;
+            box-shadow: 0 0 16px rgba(127, 244, 255, 0.15);
+        }
+
+        .matrix-thumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 3px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .matrix-thumb::before {
+            display: none !important;
+            content: none !important;
+        }
+
+        .matrix-thumb::after {
+            display: none !important;
+            content: none !important;
+        }
+
+        .matrix-info h4 {
+            font-size: 15px;
+            font-weight: 800;
+            color: var(--color-primary);
+            margin-bottom: 4px;
+            letter-spacing: 0.4px;
+        }
+
+        .matrix-info p {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .history-actions {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 16px;
+        }
+
+        .btn-history-clear {
+            padding: 8px 14px;
+            font-size: 13px;
+            font-weight: 700;
+            border: 1px solid var(--border-color);
+            background: linear-gradient(180deg, rgba(13, 19, 34, 0.95), rgba(8, 13, 26, 0.95));
+            color: var(--text-muted);
+            border-radius: 18px;
+            cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .btn-history-clear:hover,
+        .btn-history-clear:active {
+            color: var(--color-active);
+            border-color: var(--color-active);
+            background-color: rgba(0, 240, 255, 0.08);
+        }
+
+        .history-empty {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 24px 16px;
+            color: var(--text-muted);
+            font-size: 14px;
+            text-align: center;
+        }
+
+        .history-date {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 6px;
+        }
+
+        /* --- 📜 5. 独立鸣谢页样式 --- */
+        .credits-header {
+            font-size: 20px;
+            font-weight: 800;
+            margin-bottom: 16px;
+            color: var(--color-primary);
+            letter-spacing: 0.5px;
+        }
+
+        .log-item {
+            text-align: left;
+            padding: 12px 0;
+            border-bottom: 1px dashed var(--border-color);
+        }
+
+        .log-item:last-child {
+            border-bottom: none;
+        }
+
+        .log-name {
+            font-weight: 700;
+            color: var(--text-main);
+            font-size: 14px;
+        }
+
+        .log-desc {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="nav-item active" data-nav-view="test" onclick="switchView('welcome')">测试</div>
+        <div class="nav-item" data-nav-view="matrix" onclick="switchView('matrix')">图鉴</div>
+        <div class="nav-item" data-nav-view="history" onclick="switchView('history')">历史</div>
+        <div class="nav-item" data-nav-view="credits" onclick="switchView('credits')">鸣谢</div>
+    </nav>
+
+    <div class="container">
+
+        <div id="welcome-view" class="view active">
+            <div class="card">
+                <div class="banner-container">
+                    <img src="images/box.png" class="welcome-logo" alt="Hextech Banner">
+                </div>
+
+                <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 30px; text-align: left;">
+                    欢迎来到嚎哭深渊心理学终极考场。本测试通过 12 道基于实战的名场面情景题，精准解构你在大乱斗对局中的本能反应，并为你核发专属的20+风格图鉴身份。
+                </p>
+                <button class="btn-large" onclick="startQuiz()">开始测试</button>
+            </div>
+        </div>
+
+        <div id="quiz-view" class="view">
+            <div class="progress-text" id="progress-text">0 / 0</div>
+            <div class="progress-container">
+                <div class="progress-bar" id="progress-bar"></div>
+            </div>
+            <div class="card" style="text-align: left; padding-top: 20px;">
+                <h2 class="question-title" id="question-title">加载中...</h2>
+                <div class="options-list" id="options-list">
+                    </div>
+                <div class="quiz-navigation">
+                    <button class="btn-nav" onclick="prevQuestion()">上一题</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="result-view" class="view">
+            <div class="card">
+                <h2 class="result-title" id="result-title">称号生成中...</h2>
+                <div class="result-badge" id="result-badge">检测结果</div>
+                
+                <div class="image-frame">
+                    <img id="result-image" src="" alt="人格专属Icon">
+                </div>
+                
+                <div class="result-desc" id="result-desc">
+                    详细评语加载中...
+                </div>
+                <div class="stats-panel-card" id="stats-panel-card">
+                    <h3 class="stats-panel-title">海克斯战术数据分析</h3>
+                    <div class="stats-bars-grid" id="stats-bars-grid"></div>
+                </div>
+                <button class="btn-large" onclick="resetQuiz()" style="margin-top: 24px;">重新测试</button>
+                <button class="btn-large" style="margin-top: 12px; background-color: transparent; border: 1px solid var(--color-primary); color: var(--color-primary); box-shadow: none;" onclick="switchView('matrix')">查看全部图鉴</button>
+                <div style="text-decoration: underline; cursor: pointer; color: var(--color-primary); margin-top: 18px; font-size: 14px; text-align: center; font-weight: 500;" onclick="copyShareLink()">复制链接转发</div>
+            </div>
+        </div>
+
+        <div id="matrix-view" class="view">
+            <div class="matrix-grid" id="matrix-grid">
+                </div>
+        </div>
+
+        <div id="history-view" class="view">
+            <div class="history-actions">
+                <button class="btn-history-clear" onclick="clearQuizHistory()">清空历史</button>
+            </div>
+            <div class="matrix-grid" id="history-list"></div>
+        </div>
+
+        <div id="profile-view" class="view">
+            <div class="card" style="text-align: center;">
+                <button class="btn-nav" id="profile-back-btn" onclick="exitProfileView()" style="margin-bottom: 20px; float: left; width: auto; padding: 6px 16px;">返回</button>
+                <div style="clear: both;"></div>
+                <h2 class="result-title" id="profile-title" style="margin-top: 10px;"></h2>
+                <div class="result-badge" id="profile-badge"></div>
+                <div class="image-frame">
+                    <img id="profile-image" src="" alt="Personality Detail">
+                </div>
+                <div class="result-desc" id="profile-desc"></div>
+            </div>
+        </div>
+
+        <div id="credits-view" class="view">
+            <div class="card">
+                <h3 class="credits-header">📜 隐藏日志：特别鸣谢名单</h3>
+                <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 20px; text-align: left;">
+                    本数理模型得以顺利封神上线，离不开以下几位在「嚎哭深渊」高强度坐牢、精神状态极其稳定的资深内测实验小白鼠：
+                </p>
+                <div class="log-item">
+                    <div class="log-name">🔬 1号内测选手</div>
+                    <div class="log-desc">高能精准解锁【指挥官】。人在十里开外唯唯诺诺，但无线电信号狂点。键盘已冒烟。</div>
+                </div>
+                <div class="log-item">
+                    <div class="log-name">🔬 2号内测选手</div>
+                    <div class="log-desc">毫无感情的Try-hard高玩。吃饱拿足极致Carry，无情触发隐藏款【率队大帝】。</div>
+                </div>
+                <div class="log-item">
+                    <div class="log-name">🔬 3号内测选手</div>
+                    <div class="log-desc">同样精准升级为【率队大帝】。稳健发育不整虚的，胜率队的绝对排面。</div>
+                </div>
+                <div class="log-item">
+                    <div class="log-name">🔬 4号内测选手</div>
+                    <div class="log-desc">身体诚实地想出钢，但骨子里高精度的分奴推进拆塔灵魂出卖了他，获封【强拆办】。</div>
+                </div>
+                <div class="log-item">
+                    <div class="log-name">🔬 5号内测选手</div>
+                    <div class="log-desc">纯度100%的【掷骰狂人！】。宁死也要多留一会等新的海克斯质变，眼里写满了豪赌。</div>
+                </div>
+                <div class="log-item" style="border: none;">
+                    <div class="log-name">🔬 6号内测选手</div>
+                    <div class="log-desc">唯一翻墙手段卓越的高玩，唯一的【莽神】，喜欢玩奎桑提闪现<strong>不</strong>帮安妮挡子弹。</div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // --- 📊 1. 终极数据模型表格映射 ---
+        const questions = [
+          { id: "Q1", title: "玩莎米拉拿了【雪球扭蛋机】【弹球】，请选择你的第三个棱彩：", options: [
+            { text: "亮出你的剑", score: { F: 3, O: 1 } },
+            { text: "史上最大雪球", score: { J: 3, G: 1 } },
+            { text: "质变混沌", score: { G: 3, F: 1 } },
+            { text: "沙弥拉让给别人玩", score: { P: 3, O: 1 } }
+          ]},
+          { id: "Q2", title: "选人界面，你们队选出了 5 个 ADC；你是塞纳。此时进入了海克斯选择环节，你会选择：", options: [
+            { text: "双刀流", score: { C: 3, F: 1 } },
+            { text: "？？？", score: { P: 3, O: 1 } },
+            { text: "质变混沌", score: { G: 3, F: 1 } },
+            { text: "讨伐队友", score: { T: 3, F: 1 } }
+          ]},
+          { id: "Q3", title: "本局你是小鱼人，己方4个丢子，对面5个战士/坦克。请选择你的第一个海克斯：", options: [
+            { text: "神射法师", score: { C: 3, F: 1 } },
+            { text: "质变棱彩", score: { G: 3, F: 1 } },
+            { text: "公屏开骂", score: { T: 3, P: 1 } },
+            { text: "任务：钢化你心", score: { F: 3, O: 1 }, tag: "gangmen" }
+          ]},
+          { id: "Q4", title: "己方只剩14级的你和一只残血AD。此时刚好高地塔已破，但对面5人已经复活冲出来了，你会：", options: [
+            { text: "点队友撤退回复状态", score: { S: 3, P: 1 } },
+            { text: "点敌方水晶", score: { O: 3, P: 1 } },
+            { text: "敌方泉水跳舞", score: { J: 3, P: 1 } },
+            { text: "打字：服不服？", score: { T: 3, P: 1 } }
+          ]},
+          { id: "Q5", title: "你是一个战绩 4/0/2 的残血。你面前桥上长出了一颗精品三命大果，身后站着一个 0/6/5、没蓝没血被挂了点燃的队友，你会：", options: [
+            { text: "秒果", score: { C: 3, O: 1 } },
+            { text: "让给他吃", score: { S: 3, O: 1 } },
+            { text: "看一下队友性别", score: { J: 3, G: 1 }, tag: "daimei" },
+            { text: "来一口，跟对面爆了", score: { F: 3, G: 1 } }
+          ]},
+          { id: "Q6", title: "如果前方团战爆发，队友已经率先冲刺进去了，你一般选择：", options: [
+            { text: "开团秒跟", score: { F: 3, G: 1 } },
+            { text: "找时机收割拿头", score: { C: 3, G: 1 } },
+            { text: "后排极限距离丢技能", score: { P: 3, G: 1 } },
+            { text: "无情推线点塔", score: { O: 3, C: 1 } }
+          ]},
+          { id: "Q7", title: "如果你不幸中了对面的三颗致命雪球，眼看对面要飞过来群殴你了，你会：", options: [
+            { text: "找队友帮忙，我还能救一下", score: { P: 3, C: 1 } },
+            { text: "调整走位落地反打", score: { O: 3, C: 1 } },
+            { text: "直接反向位移准备爆了", score: { G: 3, C: 1 } },
+            { text: "双手离开键盘伤害全部抗下", score: { S: 3, T: 1 } }
+          ]},
+          { id: "Q8", title: "双方都只剩水晶，此时残局你和队友两个人，他强行开到了对面5个，此时你会：", options: [
+            { text: "义无反顾，直接开打", score: { F: 3, C: 1 } },
+            { text: "在边缘OB输出", score: { P: 3, S: 1 } },
+            { text: "保留状态清理下一波兵线", score: { O: 3, T: 1 } },
+            { text: "狂点队友撤退信号", score: { T: 3, S: 1 } }
+          ]},
+          { id: "Q9", title: "玩AD英雄开局出门，口袋里攥着1400块，你一般怎么买装备：", options: [
+            { text: "雷打不动选择守护者系列", score: { O: 3, T: 1 }, tag: "fennu" },
+            { text: "切出去查不同出装流派", score: { J: 3, S: 1 } },
+            { text: "裸锯齿短匕奔着收集者去", score: { C: 3, T: 1 } },
+            { text: "其他最快成装小散件", score: { G: 3, T: 1 } }
+          ]},
+          { id: "Q10", title: "被对面手长英雄压在塔下揍，战绩 2-15，队友还在互相发问号，此时你会：", options: [
+            { text: "默默在后台发起投降", score: { J: 3, S: 1 } },
+            { text: "开始有理有据地打字复盘并点击队友名字", score: { T: 3, S: 1 } },
+            { text: "狂发可爱表情包并尝试安抚", score: { S: 3, J: 1 } },
+            { text: "默默在塔下清线", score: { O: 3, J: 1 } }
+          ]},
+          { id: "Q11", title: "平时大乱斗里你最常玩的英雄类型是：", options: [
+            { text: "高伤害大C", score: { C: 3, J: 1 } },
+            { text: "高交战前排", score: { F: 3, J: 1 } },
+            { text: "高功能性控制", score: { J: 3, S: 1 } },
+            { text: "看团队阵容缺啥补啥", score: { S: 3, J: 1 } }
+          ]},
+          { id: "Q12", title: "己方全灭仅剩你刚复活，塔前一大波兵线进高地塔，队友最快复活倒计时还有10秒，你会：", options: [
+            { text: "疯狂清兵并点击队友复活时间", score: { S: 3, T: 1 } },
+            { text: "精准拉扯，极限距离骚扰对面残血拆塔", score: { P: 3, J: 1 } },
+            { text: "不管小兵，跟对面的残血爆了", score: { G: 3, C: 1 } },
+            { text: "疯狂给队友发问号... 开团不等人！", score: { T: 3, P: 1 } }
+          ]}
+        ];
+
+        // --- 📖 2. 图鉴人设数据库 ---
+        const personalityMatrix = {
+            // === GROUP 1: 极值款 ===
+            "mangshen": { title: "极值款 · 莽神", badge: "单维度 F 拉满", file: "mangshen.jpg", desc: "“动手！准备动手！懦弱之举绝不姑息！”\n\n你眼里没有撤退信号，雪球砸中哪个人，大脑就彻底切除，必定二段飞过去。宁可在疯狂的冲锋中瞬间蒸发，也绝不在防御塔后多畏缩一秒。你的键盘上只有前往敌方泉水的单向通行证，是嚎哭深渊里永不停歇的交战永动核心。" },
+            "diu": { title: "极值款 · 丢丢仙人", badge: "单维度 P 拉满", file: "diu.png", desc: "“打了我队友，就不能再打我了哟~”\n\n你长年稳居在自家防御塔阴影里，掌握了绝对空间安全距离的至高真理。最擅长在极限黑视野盲区向前方疯狂丢技能刮痧。只要自己还是满血，基地的输赢皆是身外之物。" },
+            "ofull": { title: "极值款 · 强拆办", badge: "单维度 O 拉满", file: "ofull.png", desc: "“别冲了！点塔！一波一波一波！”\n\n你眼里没有杀人剑，只有无情叠加的防御塔赏金和敌方水晶的血条。你是来赢的，无情推铁塔是最大的乐趣。任何试图在水晶前跳舞虐泉、拖延推塔节奏的乐子人队友，都会瞬间迎来你冷酷的黄色问号轰炸。" },
+            "tou": { title: "极值款 · 掷骰狂人！", badge: "单维度 G 拉满", file: "tou.png", desc: "“如果我质变黄金质变棱彩质变混沌，阁下又该如何应对？”\n\n你主打一个绝对相信发牌员。摇出掷骰狂人羁绊只是你的及格线，不到抽干最后一次摇骰次数和海克斯刷新，你甚至都不打算抬眼看一眼对面的阵容。" },
+            "ktou": { title: "极值款 · K头狂魔", badge: "单维度 C 拉满", file: "ktou.jpg", desc: "“感谢大自然的馈赠，Penta Kill！队友打得不错，伤害挺足的。”\n\n口袋里攥着 1400 块雷打不动裸收集者出门的纯粹独狼。坚决不打第一波正面消耗，长年潜伏在极度安全的血线边缘伺机闪现。队友拼死拼活打出的输出，只是你通往凌驾全场、豪取五杀和斩获 MVP 的垫脚石。" },
+            "budda": { title: "极值款 · 活菩萨", badge: "单维度 S 拉满", file: "budda.png", desc: "“站在布隆身后！”\n\n大公无私坦克开团手，嚎哭深渊里最伟大的圣洁绿叶。吃最少草的挤最浓的奶，顶着对面的枪林弹雨肉身开团抗下一万伤害。自己化为尸体躺在地上，也要含泪给拿下人头的队友点一个魄罗大拇指。" },
+            "judge": { title: "极值款 · 大法官", badge: "单维度 T 拉满", file: "judge.png", desc: "“三令五申吸血习性不能出狂徒，你会不会玩？cs”\n\n深渊最高合规审查者，阵亡后就是他的终审法庭。眼里揉不得沙子，键盘打字速度甚至超越了英雄攻速上限。谁买错了装备，谁空了大招，谁卡了走位，都逃不过他公屏字字珠玑的开庭审判。" },
+            "six": { title: "极值款 · 峡谷老六", badge: "单维度 J 拉满", file: "six.jpg", desc: "“啊哈哈哈哈哈哈哈*ctrl3 *爽朗地笑”\n\n长年死死占领着边路草丛的战略几何体。队友打团他在草里看，队友全死光了他在草里顺手捞个残血。高频在阴暗角落里亮起恶搞表情包，堪称极地潜伏大师。" },
+
+            // === GROUP 2: 多维款 ===
+            "shuang": { title: "多维款 · 绝地爽子", badge: "G + C / G + J 组合", file: "shuang.png", desc: "“感觉不够爽啊兄弟，再来亿把！”\n\n你进游戏就是来爽的！赢不赢是发牌员和运气的事，没爽到马上点发起投降再开亿把。即便背后自家基地水晶在无情爆炸，你也会看着自己豪华的输出面板，嘴角露出核善而变态的满足微笑。" },
+            "oc": { title: "多维款 · 率队打手", badge: "F + O / C + O 组合", file: "oc.jpg", desc: "“*正在路上* *正在路上**问号**塞拉斯不屑**帅*”\n\n你是胜率队里纯靠铁血技术硬Carry的冷酷大腿。不参与任何低级的情绪互动，对线卡线发育严丝合缝，技能释放精准如算法。像一个没有感情的通关机器，用教科书般的物理推进彻底碾碎对方。" },
+            "faci": { title: "多维款 · 万物皆可刺", badge: "C + F / F + G 组合", file: "faci.png", desc: "“出肉？出肉是不可能出肉的，这把不出AP我晚上躺床上睡不着觉。”\n\n突刺流派的钢铁拥趸。在你的世界里坚决不出任何一件肉装，游戏开始大脑自动关闭，双眼闪着疯狂的红光。你的大招绝不打反手，只留给对面体型最瘦小、最无助的那个小脆皮。" },
+            "goudou": { title: "多维款 · 苟道至尊", badge: "P + T / P + G 组合", file: "goudao.png", desc: "“活着的人才有资格清理兵线，你们冲太深了，我来推进。”\n\n你将拉扯精神与生存玄学玩到了极致的深渊修仙者。长年保持满血状态在队伍最后方输出焦虑，稍微有一丝风吹草动溜得比谁都快。一旦大部队白给，马上开始极其理智地在后方打字分析局势。" },
+            "sm": { title: "多维款 · 抖S", badge: "C + J / P + J 组合", file: "sm.jpg", desc: "“哎呀，怎么又接技能？扭一下嘛，求求你过来看我一眼。”\n\n你长年站在全屏最安全的折磨距离，手指肌肉记忆般焊死在写着“Ctrl+3大笑”的宏按键上。一边用高频丢出的技能给对手疯狂刮痧、慢性放血，一边疯狂亮魄罗哭哭表情，将折磨对面的精神状态作为最大快乐源泉。" },
+            "kda": { title: "多维款 · KDA保卫者", badge: "P + O / P + C 组合", file: "kda.jpg", desc: "“战绩 2/0/25，只要我不死，这把的 MVP 就有极高概率是我。”\n\n将「保命」与「刷完美数据」研究到法学精度的拉扯艺术家。你可以没有输出，但绝不能死。永远保持满血，永远游走在防御塔阴影的绝对边缘。局势一有动荡，瞬间化身极地短跑冠军。" },
+            "mom": { title: "多维款 · 妈妈", badge: "P + S / O + S 组合", file: "mom.jpg", desc: "“宝贝放心冲！妈妈虚弱引燃和盾都套上了！”\n\n你是嚎哭深渊里的圣洁慈母，化身纯粹控制与给盾回血的软辅化身。无怨无悔、寸步不离地守护在自家大C身后，本命海克斯喂呜喂呜，只为在上前交火时为其套上一层写满安全感与无限关怀的温柔保护罩。" },
+            "post": { title: "多维款 · 指挥官", badge: "O + T / S + T 组合", file: "post.jpg", desc: "“看我信号！别冲了！撤退！等我复活倒计时 5 秒再打！”\n\n你虽然拿着最脆皮的身体，却有着 S 赛全球总决赛主教练的宏大心态。由于自身极度脆弱常年处于战场的边缘，因而开始疯狂点撤退信号与队友复活倒计时向前方的先锋们输出压力。" },
+            "wind": { title: "多维款 · 神风先锋", badge: "F + T / G + T 组合", file: "wind.png", desc: "“我超，我都进场开到五个了！你们在后面做乜嘢？跟上啊！”\n\n你的雪球只要砸中了，大脑就在零点一秒内彻底切除，必定施展二段飞过去。进去的一瞬间也许会被对面五个壮汉蒸发，变成灵魂状态躺在地板上，然后在全屏顶端狂点「黄色危险信号」输出不解。" },
+            "gai": { title: "多维款 · 中东兄弟", badge: "F + J / G + S 组合", file: "gai.png", desc: "“别拉扯了，不擅长拉扯。看我进场跟丢子爆了！”\n\n你拒绝任何开庭打字与情绪内耗，纯粹的极地肉身核弹流高玩。开局默默堆满俯冲轰炸、小丑学院的不归路套装。一到线上就死死盯着对面的后排，寻找机会和对面原地融化同归于尽，随后高歌猛进奔向泉水。" },
+            "bawang": { title: "多维款 · 西楚霸王", badge: "C + T / O + J 组合", file: "bawang.png", desc: "“一帮连兵都不会清的废物，全给老子退后，看我操作！”\n\n你是全场经济吃得最饱、输出打得最高，但脾气也同样最爆裂的霸王。一边在前方长坂坡横冲直撞疯狂砍翻对面拿下连杀，一边在公屏和表现不佳的队友高频互动，侵略性与攻击性双重拉满。" },
+            "dunpai": { title: "多维款 · 不灭盾墙", badge: "F + S / S + J 组合", file: "dunpai.jpg", desc: "“越过我？想切后排？先问问老子身上这五千层的心之钢！”\n\n你是无情的不灭前排机器。长年用最硬的肉身死死卡住两条兵线交火的死亡盲区。只要他那高大的身影还没有倒下，对面的刺客就休想往前多逼近大C一步，给后排的丢子拉扯提供了绝对叹息之墙般的安全防线。" },
+
+            // === GROUP 3: FALLBACK ===
+            "qiu": { title: "兜底极品 · 纯正非酋", badge: "全属性端水兜底", file: "qiu.jpg", desc: "“随缘吧随缘吧，反正系统给啥我玩啥，不送能赢就行。”\n\n摇了三次骰子全是一手垃圾近战，想玩个手长丢子系统硬塞你三个笨重笨重的大肉。各项属性维度均衡得如同白开水。你的游戏人生就是一场伟大的妥协，凑合打吧，反正能赢全靠抱队友大腿，彻底佛了。" },
+
+            // === GROUP 4: 隐藏款 (Pushed to the very end) ===
+            "gangmen": { title: "隐藏款 · 黄昏的钢门信徒", badge: "优先拦截隐藏款", file: "gangmen.jpg", desc: "“别杀！让我刚一下！让我刚一下！”\n\n万物皆可心之钢流派的狂热拥趸。你彻底无视战局的成败、人头的得失以及自家基地风雨飘摇的废墟，双手合十紧抱巨大的钢门，那一记清脆悠扬的「当~」是你这辈子听过最动听的梵音。" },
+            "daimei": { title: "隐藏款 · 花孔雀", badge: "优先拦截隐藏款", file: "daimei.png", desc: "“*塞拉斯不屑 这波帅吧？没我真赢不了🕶️”\n\n今天手不手热不重要，胜率高不高也无所谓。只要对局里疑似存在异性玩家、或者特定的围观者，你当场化身为极地最闪耀的花孔雀。全场狂吃最高经济，交出无数个最帅气、但也最无脑的闪现炫技。" },
+            "fennu": { title: "隐藏款 · 率队大帝", badge: "优先拦截隐藏款", file: "dadi.png", desc: "“卡住这波跑车线，别冲，这波直接点掉水晶。”\n\n大局观拉满的钢铁分奴队灵魂终极核心。雷打不动选择守护者系列稳健出门，卡线发育、野区控血严丝合缝，从不参与任何低级的情绪小丑开庭。用教科书般的兵线运营与推塔节奏，在不知不觉中彻底碾碎对方的意志。" }
+        };
+
+        // --- ⚙️ 3. 游戏状态控制器 ---
+        let currentQuestionIndex = 0;
+        let userAnswers = []; 
+        let triggeredTags = { daimei: false, gangmen: false, fennu: false };
+        const HISTORY_STORAGE_KEY = "hbti_quiz_history";
+        let profilePreviousView = 'matrix';
+
+        function switchView(viewId) {
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+
+            document.getElementById(`${viewId}-view`).classList.add('active');
+
+            if (viewId === 'matrix') {
+                renderMatrixView();
+            } else if (viewId === 'history') {
+                renderHistoryView();
+            }
+
+            const navView = (viewId === 'welcome' || viewId === 'quiz' || viewId === 'result') ? 'test' : (viewId === 'profile' ? profilePreviousView : viewId);
+            const activeNav = document.querySelector(`.nav-item[data-nav-view="${navView}"]`);
+            if (activeNav) {
+                activeNav.classList.add('active');
+            }
+        }
+
+        function shuffleQuestions() {
+            for (let i = questions.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [questions[i], questions[j]] = [questions[j], questions[i]];
+            }
+        }
+
+        function startQuiz() {
+            currentQuestionIndex = 0;
+            userAnswers = [];
+            triggeredTags = { daimei: false, gangmen: false, fennu: false };
+            shuffleQuestions();
+            switchView('quiz');
+            renderQuestion();
+        }
+
+        function renderQuestion() {
+            const q = questions[currentQuestionIndex];
+
+            document.getElementById('progress-text').innerText = `${currentQuestionIndex + 1} / ${questions.length}`;
+            document.getElementById('progress-bar').style.width = `${((currentQuestionIndex + 1) / questions.length) * 100}%`;
+
+            document.getElementById('question-title').innerText = q.title;
+
+            const optionsList = document.getElementById('options-list');
+            optionsList.innerHTML = '';
+
+            q.options.forEach((opt, idx) => {
+                const card = document.createElement('div');
+                card.className = 'option-card';
+                card.innerText = opt.text;
+                card.onclick = () => selectOption(idx);
+                optionsList.appendChild(card);
+            });
+        }
+
+        function selectOption(index) {
+            userAnswers[currentQuestionIndex] = questions[currentQuestionIndex].options[index];
+
+            if (currentQuestionIndex < questions.length - 1) {
+                currentQuestionIndex++;
+                renderQuestion();
+            } else {
+                calculateHBTIResult();
+            }
+        }
+
+        function prevQuestion() {
+            if (currentQuestionIndex > 0) {
+                currentQuestionIndex--;
+                renderQuestion();
+            } else {
+                switchView('welcome');
+            }
+        }
+
+        function calculateHBTIResult(answers = userAnswers) {
+            const scores = { F: 0, P: 0, O: 0, G: 0, C: 0, S: 0, T: 0, J: 0 };
+            const chosenTags = [];
+
+            answers.forEach(ans => {
+                if (ans && ans.score) {
+                    for (const axis in ans.score) {
+                        scores[axis] += ans.score[axis];
+                    }
+                }
+                if (ans && ans.tag) {
+                    chosenTags.push(ans.tag);
+                }
+            });
+
+            const resolveFinalKey = () => {
+                if (chosenTags.includes("gangmen") && scores.F >= 12 && scores.F > scores.P) return "gangmen";
+                if (chosenTags.includes("fennu") && scores.O >= 12 && scores.O > scores.G) return "fennu";
+                if (chosenTags.includes("daimei") && scores.J >= 10 && scores.C > scores.S) return "daimei";
+
+                const sortedTraits = Object.keys(scores)
+                    .map(key => ({ trait: key, val: scores[key] }))
+                    .sort((a, b) => b.val - a.val);
+
+                const top1 = sortedTraits[0];
+                const top2 = sortedTraits[1];
+
+                if (top1.val >= 14 && (top1.val - top2.val) >= 4) {
+                    const singleMaxMap = {
+                        F: "mangshen", P: "diu", O: "ofull", G: "tou",
+                        C: "ktou", S: "budda", T: "judge", J: "six"
+                    };
+                    if (singleMaxMap[top1.trait]) return singleMaxMap[top1.trait];
+                }
+
+                const comboKey = [top1.trait, top2.trait].sort().join("");
+                const comboMap = {
+                    "CG": "shuang", "GJ": "shuang",
+                    "FO": "oc",     "CO": "oc",
+                    "CF": "faci",   "FG": "faci",
+                    "PT": "goudou", "PG": "goudou",
+                    "CJ": "sm",     "PJ": "sm",
+                    "PO": "kda",    "PC": "kda",
+                    "PS": "mom",    "OS": "mom",
+                    "OT": "post",   "ST": "post",
+                    "FT": "wind",   "GT": "wind",
+                    "FJ": "gai",    "GS": "gai",
+                    "CT": "bawang", "OJ": "bawang",
+                    "FS": "dunpai", "SJ": "dunpai",
+                    "FP": "qiu",    "GO": "qiu",
+                    "CS": "qiu",    "JT": "qiu"
+                };
+
+                return comboMap[comboKey] || "goudou";
+            };
+
+            const finalKey = resolveFinalKey();
+            saveQuizHistory(finalKey);
+            renderResultPage(finalKey, scores);
+        }
+
+        function escapeHTML(value) {
+            return String(value || "").replace(/[&<>"']/g, char => ({
+                "&": "&amp;",
+                "<": "&lt;",
+                ">": "&gt;",
+                "\"": "&quot;",
+                "'": "&#39;"
+            }[char]));
+        }
+
+        function renderPersonalityDescription(elementId, desc) {
+            const target = document.getElementById(elementId);
+            const parts = String(desc || "").split(/\n\n+/);
+            const quote = parts.shift() || "";
+            const analysis = parts.join("\n\n");
+            target.innerHTML = `<p class="gameplay-quote">${escapeHTML(quote)}</p><div class="analysis-text">${escapeHTML(analysis)}</div>`;
+        }
+
+        function renderResultPage(key, scores) {
+            const resultData = personalityMatrix[key];
+            const resultImage = document.getElementById('result-image');
+            document.getElementById('result-badge').innerText = resultData.badge;
+            document.getElementById('result-title').innerText = getFormattedPersonalityTitle(resultData.title);
+            resultImage.alt = resultData.title;
+            setImageSource(resultImage, resultData.file);
+            renderPersonalityDescription('result-desc', resultData.desc);
+            renderStatsPanel(scores);
+            switchView('result');
+        }
+
+        function renderStatsPanel(scores) {
+            const grid = document.getElementById('stats-bars-grid');
+            const statPairs = [
+                { leftKey: "F", leftLabel: "F 莽夫本能", rightKey: "P", rightLabel: "P 丢子拉扯" },
+                { leftKey: "O", leftLabel: "O 分奴推进", rightKey: "G", rightLabel: "G 质变豪赌" },
+                { leftKey: "C", leftLabel: "C 独狼收割", rightKey: "S", rightLabel: "S 圣洁绿叶" },
+                { leftKey: "T", leftLabel: "T 终审开庭", rightKey: "J", rightLabel: "J 搞怪整活" }
+            ];
+
+            grid.innerHTML = statPairs.map(pair => {
+                const leftScore = scores[pair.leftKey] || 0;
+                const rightScore = scores[pair.rightKey] || 0;
+                const total = leftScore + rightScore;
+                const leftPercent = total > 0 ? Math.round((leftScore / total) * 100) : 50;
+                const rightPercent = total > 0 ? 100 - leftPercent : 50;
+                const leftDominant = leftPercent > rightPercent;
+                const rightDominant = rightPercent > leftPercent;
+                return `
+                    <div class="stats-row">
+                        <div class="stats-side stats-side-left ${leftDominant ? 'stats-side-dominant' : ''}">
+                            <div class="stats-label">${pair.leftLabel}</div>
+                            <div class="stats-percent">${leftPercent}%</div>
+                        </div>
+                        <div class="stats-track">
+                            <div class="stats-fill stats-fill-left ${leftDominant ? 'stats-fill-dominant' : ''}" style="width: ${leftPercent}%"></div>
+                            <div class="stats-fill stats-fill-right ${rightDominant ? 'stats-fill-dominant' : ''}" style="width: ${rightPercent}%"></div>
+                            <div class="stats-midline"></div>
+                        </div>
+                        <div class="stats-side stats-side-right ${rightDominant ? 'stats-side-dominant' : ''}">
+                            <div class="stats-percent">${rightPercent}%</div>
+                            <div class="stats-label">${pair.rightLabel}</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function resetQuiz() {
+            startQuiz();
+        }
+
+        function copyShareLink() {
+            navigator.clipboard.writeText(window.location.href).then(() => {
+                alert("📋 链接已成功复制！快去转给你的大乱斗开黑队友开黑破防吧！");
+            }).catch(err => {
+                alert("复制失败，请手动复制浏览器地址栏网址分享。");
+            });
+        }
+
+        function formatHistoryDate(date) {
+            const pad = value => String(value).padStart(2, "0");
+            return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
+        }
+
+        function getQuizHistory() {
+            try {
+                const records = JSON.parse(localStorage.getItem(HISTORY_STORAGE_KEY) || "[]");
+                return Array.isArray(records) ? records : [];
+            } catch (error) {
+                return [];
+            }
+        }
+
+        function saveQuizHistory(key) {
+            const resultData = personalityMatrix[key];
+            if (!resultData) return;
+
+            const record = {
+                key: key,
+                date: formatHistoryDate(new Date()),
+                title: resultData.title,
+                badge: resultData.badge,
+                file: resultData.file
+            };
+
+            try {
+                const records = getQuizHistory();
+                records.push(record);
+                localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(records));
+            } catch (error) {
+                console.warn("HBTI history save failed", error);
+            }
+        }
+
+        function clearQuizHistory() {
+            try {
+                localStorage.removeItem(HISTORY_STORAGE_KEY);
+            } catch (error) {
+                console.warn("HBTI history clear failed", error);
+            }
+            renderHistoryView();
+        }
+
+        const hiddenMatrixKeys = ["gangmen", "daimei", "fennu"];
+
+        function getMatrixDisplayTitle(title) {
+            const parts = title.split(" · ");
+            return parts[parts.length - 1];
+        }
+
+        function getFormattedPersonalityTitle(title) {
+            const pureTitle = getMatrixDisplayTitle(title);
+            return `「 ${Array.from(pureTitle).join(' ')} 」`;
+        }
+
+        function resolvePersonalityKeyFromRecord(record) {
+            if (record.key && personalityMatrix[record.key]) return record.key;
+            return Object.keys(personalityMatrix).find(key => {
+                const item = personalityMatrix[key];
+                return item.file === record.file || item.title === record.title;
+            });
+        }
+
+        function showPersonalityProfile(key, fromView) {
+            profilePreviousView = fromView;
+            const data = personalityMatrix[key];
+            if (!data) return;
+
+            const profileImage = document.getElementById('profile-image');
+            document.getElementById('profile-title').innerText = getFormattedPersonalityTitle(data.title);
+            document.getElementById('profile-badge').innerText = data.badge;
+            profileImage.alt = data.title;
+            setImageSource(profileImage, data.file);
+            renderPersonalityDescription('profile-desc', data.desc);
+
+            switchView('profile');
+        }
+
+        function exitProfileView() {
+            switchView(profilePreviousView);
+        }
+
+        function getImageCandidates(file) {
+            if (!file) return [];
+            const normalizedFile = file.trim();
+            const baseName = normalizedFile.replace(/\.[^/.]+$/, "");
+            const candidates = [];
+            const addCandidate = src => {
+                if (!candidates.includes(src)) candidates.push(src);
+            };
+
+            addCandidate(`images/${normalizedFile}`);
+            ["JPG", "jpg", "PNG", "png", "JPEG", "jpeg"].forEach(ext => {
+                addCandidate(`images/${baseName}.${ext}`);
+            });
+            return candidates;
+        }
+
+        function setImageSource(img, file) {
+            const fallbackSrc = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='160' viewBox='0 0 120 160'><rect width='120' height='160' fill='%23ffffff'/><rect x='1' y='1' width='118' height='158' rx='10' fill='none' stroke='%23E2E8F0'/><text x='60' y='80' font-size='12' fill='%2364748B' text-anchor='middle' dominant-baseline='middle'>图片加载中</text></svg>";
+            const candidates = getImageCandidates(file);
+            let index = 0;
+
+            img.style.display = '';
+            img.onerror = function() {
+                index++;
+                if (index < candidates.length) {
+                    img.src = candidates[index];
+                } else {
+                    img.onerror = null;
+                    img.src = fallbackSrc;
+                }
+            };
+            img.src = candidates[0] || fallbackSrc;
+        }
+
+        function renderMatrixView() {
+            const grid = document.getElementById('matrix-grid');
+            grid.innerHTML = '';
+            const matrixOrder = Object.keys(personalityMatrix)
+                .filter(key => !hiddenMatrixKeys.includes(key))
+                .concat(hiddenMatrixKeys);
+
+            matrixOrder.forEach(key => {
+                const item = personalityMatrix[key];
+                const box = document.createElement('div');
+                const thumb = document.createElement('div');
+                const img = document.createElement('img');
+                const info = document.createElement('div');
+                const title = document.createElement('h4');
+                const badge = document.createElement('p');
+
+                box.className = 'matrix-card';
+                box.onclick = () => showPersonalityProfile(key, 'matrix');
+                thumb.className = 'matrix-thumb';
+                info.className = 'matrix-info';
+
+                img.alt = getMatrixDisplayTitle(item.title);
+                setImageSource(img, item.file);
+                title.innerText = getMatrixDisplayTitle(item.title);
+                badge.innerText = item.badge;
+
+                thumb.appendChild(img);
+                info.appendChild(title);
+                info.appendChild(badge);
+                box.appendChild(thumb);
+                box.appendChild(info);
+                grid.appendChild(box);
+            });
+        }
+
+        function renderHistoryView() {
+            const list = document.getElementById('history-list');
+            const records = getQuizHistory();
+            list.innerHTML = '';
+
+            if (records.length === 0) {
+                const empty = document.createElement('div');
+                empty.className = 'history-empty';
+                empty.innerText = '暂无测试历史，快去开一把测试吧！';
+                list.appendChild(empty);
+                return;
+            }
+
+            records.slice().reverse().forEach(record => {
+                const profileKey = resolvePersonalityKeyFromRecord(record);
+                const box = document.createElement('div');
+                const thumb = document.createElement('div');
+                const img = document.createElement('img');
+                const info = document.createElement('div');
+                const title = document.createElement('h4');
+                const badge = document.createElement('p');
+                const date = document.createElement('div');
+
+                box.className = 'matrix-card';
+                if (profileKey) {
+                    box.onclick = () => showPersonalityProfile(profileKey, 'history');
+                }
+                thumb.className = 'matrix-thumb';
+                info.className = 'matrix-info';
+                date.className = 'history-date';
+
+                img.alt = record.title || '历史人格Icon';
+                setImageSource(img, record.file);
+                title.innerText = record.title || '未知结果';
+                badge.innerText = record.badge || '测试记录';
+                date.innerText = record.date || '';
+
+                thumb.appendChild(img);
+                info.appendChild(title);
+                info.appendChild(badge);
+                info.appendChild(date);
+                box.appendChild(thumb);
+                box.appendChild(info);
+                list.appendChild(box);
+            });
+        }
+
+        window.onload = function() {
+            renderMatrixView();
+            renderHistoryView();
+        };
+    </script>
+</body>
+</html>
