@@ -967,6 +967,19 @@
         const HISTORY_STORAGE_KEY = "hbti_quiz_history";
         let profilePreviousView = 'matrix';
 
+        function preloadImages() {
+            const assets = ["images/box.webp"];
+            for (const key in personalityMatrix) {
+                if (personalityMatrix[key].file) {
+                    assets.push(`images/${personalityMatrix[key].file}`);
+                }
+            }
+            assets.forEach(src => {
+                const img = new Image();
+                img.src = src;
+            });
+        }
+
         function switchView(viewId) {
             document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
             document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
@@ -1382,6 +1395,7 @@
         }
 
         window.onload = function() {
+            preloadImages();
             renderMatrixView();
             renderHistoryView();
         };
